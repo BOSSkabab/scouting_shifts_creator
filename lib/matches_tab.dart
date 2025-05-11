@@ -16,7 +16,6 @@ class MatchesTab extends StatefulWidget {
 }
 
 class MatchesTabState extends State<MatchesTab> {
-  final TextEditingController _nameController = TextEditingController();
   final TextEditingController _countController = TextEditingController(
     text: '10',
   );
@@ -33,31 +32,8 @@ class MatchesTabState extends State<MatchesTab> {
 
   @override
   void dispose() {
-    _nameController.dispose();
     _countController.dispose();
     super.dispose();
-  }
-
-  void _addMatch() {
-    if (_nameController.text.trim().isEmpty) return;
-
-    if (widget.matches.any(
-      (match) => match.name == _nameController.text.trim(),
-    )) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Match with this name already exists')),
-      );
-      return;
-    }
-
-    final newMatch = Match(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
-      name: _nameController.text.trim(),
-    );
-
-    final updatedMatches = [...widget.matches, newMatch];
-    widget.onMatchesChanged(updatedMatches);
-    _nameController.clear();
   }
 
   void _deleteMatch(String id) {
@@ -222,47 +198,12 @@ class MatchesTabState extends State<MatchesTab> {
                               ),
                             ),
                           ),
-                        ],
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.all(12.0),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: TextField(
-                              controller: _nameController,
-                              decoration: const InputDecoration(
-                                labelText: 'Match Name',
-                                border: OutlineInputBorder(),
-                                filled: true,
-                                fillColor: Colors.white,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                          ElevatedButton.icon(
-                            onPressed: _addMatch,
-                            icon: const Icon(Icons.add),
-                            label: const Text('Add'),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.indigo,
-                              foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 20,
-                                vertical: 14,
-                              ),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                            ),
-                          ),
+                          const SizedBox(width: 8),
                           IconButton(
                             onPressed: _clearAllMatches,
-                            icon: const Icon(
-                              Icons.delete_forever,
-                              color: Colors.redAccent,
-                            ),
+                            icon: const Icon(Icons.delete_forever),
+                            tooltip: 'Clear All Matches',
+                            color: Colors.redAccent,
                           ),
                         ],
                       ),

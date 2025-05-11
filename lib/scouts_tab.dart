@@ -27,14 +27,26 @@ class ScoutsTabState extends State<ScoutsTab> {
   }
 
   void _addScout() {
-    if (_nameController.text.trim().isEmpty) return;
+    final rawInput = _nameController.text.trim();
+    if (rawInput.isEmpty) return;
 
-    final newScout = Scout(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
-      name: _nameController.text.trim(),
-    );
+    final names =
+        rawInput
+            .split(',')
+            .map((name) => name.trim())
+            .where((name) => name.isNotEmpty)
+            .toList();
+    if (names.isEmpty) return;
 
-    final updatedScouts = [...widget.scouts, newScout];
+    final newScouts =
+        names.map((name) {
+          return Scout(
+            id: DateTime.now().millisecondsSinceEpoch.toString() + name,
+            name: name,
+          );
+        }).toList();
+
+    final updatedScouts = [...widget.scouts, ...newScouts];
     widget.onScoutsChanged(updatedScouts);
     _nameController.clear();
   }
@@ -115,54 +127,96 @@ class ScoutsTabState extends State<ScoutsTab> {
                           ),
                         ),
                       )
-                      : ListView.builder(
-                        padding: const EdgeInsets.only(bottom: 16),
-                        itemCount: widget.scouts.length,
-                        itemBuilder: (context, index) {
-                          final scout = widget.scouts[index];
-                          return Card(
-                            margin: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 8,
-                            ),
-                            elevation: 5,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: ListTile(
-                              title: Text(
-                                scout.name,
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 16,
+                      : Builder(
+                        builder: (context) {
+                          final sortedScouts = [...widget.scouts];
+                          sortedScouts.sort((a, b) {
+                            final aPriority =
+                                (a.unavailableMatches.isNotEmpty ||
+                                        a.incompatibleScouts.isNotEmpty)
+                                    ? 0
+                                    : 1;
+                            final bPriority =
+                                (b.unavailableMatches.isNotEmpty ||
+                                        b.incompatibleScouts.isNotEmpty)
+                                    ? 0
+                                    : 1;
+                            return aPriority.compareTo(bPriority);
+                          });
+                          return ListView.builder(
+                            padding: const EdgeInsets.only(bottom: 16),
+                            itemCount: sortedScouts.length,
+                            itemBuilder: (context, index) {
+                              final scout = sortedScouts[index];
+                              return Card(
+                                margin: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 8,
                                 ),
-                              ),
-                              subtitle: Text(
-                                'Unavailable: ${scout.unavailableMatches.length} matches\n'
-                                'Incompatible: ${scout.incompatibleScouts.length} scouts',
-                              ),
-                              trailing: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  IconButton(
-                                    icon: const Icon(
-                                      Icons.edit,
-                                      color: Colors.blueGrey,
+                                elevation: 5,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: ListTile(
+                                  title: Text(
+                                    scout.name,
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 16,
                                     ),
-                                    onPressed: () {
-                                      _showEditScoutDialog(scout);
-                                    },
                                   ),
-                                  IconButton(
-                                    icon: const Icon(
-                                      Icons.delete,
-                                      color: Colors.redAccent,
-                                    ),
-                                    onPressed: () => _deleteScout(scout.id),
+                                  subtitle: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        'Unavailable: ${scout.unavailableMatches.length} matches',
+                                      ),
+                                      if (scout.unavailableMatches.isNotEmpty)
+                                        Text(
+                                          '→ ${_formatMatchRanges(scout.unavailableMatches)}',
+                                          style: const TextStyle(
+                                            fontSize: 12,
+                                            color: Colors.black87,
+                                          ),
+                                        ),
+                                      Text(
+                                        'Incompatible: ${scout.incompatibleScouts.length} scouts',
+                                      ),
+                                      if (scout.incompatibleScouts.isNotEmpty)
+                                        Text(
+                                          '→ ${scout.incompatibleScouts.map((id) => widget.scouts.firstWhere((s) => s.id == id, orElse: () => Scout(id: id, name: 'Unknown')).name).join(', ')}',
+                                          style: const TextStyle(
+                                            fontSize: 12,
+                                            color: Colors.black87,
+                                          ),
+                                        ),
+                                    ],
                                   ),
-                                ],
-                              ),
-                            ),
+                                  trailing: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      IconButton(
+                                        icon: const Icon(
+                                          Icons.edit,
+                                          color: Colors.blueGrey,
+                                        ),
+                                        onPressed: () {
+                                          _showEditScoutDialog(scout);
+                                        },
+                                      ),
+                                      IconButton(
+                                        icon: const Icon(
+                                          Icons.delete,
+                                          color: Colors.redAccent,
+                                        ),
+                                        onPressed: () => _deleteScout(scout.id),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            },
                           );
                         },
                       ),
@@ -171,6 +225,33 @@ class ScoutsTabState extends State<ScoutsTab> {
         ),
       ),
     );
+  }
+
+  String _formatMatchRanges(List<String> matchIds) {
+    if (matchIds.isEmpty) return '';
+    final matchIndexMap = {
+      for (int i = 0; i < widget.matches.length; i++) widget.matches[i].id: i,
+    };
+
+    // Deduplicate and sort by index
+    final sorted =
+        matchIds.where((id) => matchIndexMap.containsKey(id)).toSet().toList()
+          ..sort((a, b) => matchIndexMap[a]!.compareTo(matchIndexMap[b]!));
+
+    List<String> ranges = [];
+    int start = 0;
+    while (start < sorted.length) {
+      int end = start;
+      while (end + 1 < sorted.length &&
+          matchIndexMap[sorted[end + 1]] == matchIndexMap[sorted[end]]! + 1) {
+        end++;
+      }
+      final startName = widget.matches[matchIndexMap[sorted[start]]!].name;
+      final endName = widget.matches[matchIndexMap[sorted[end]]!].name;
+      ranges.add(start == end ? startName : '$startName - $endName');
+      start = end + 1;
+    }
+    return ranges.join(', ');
   }
 
   void _showEditScoutDialog(Scout scout) {
