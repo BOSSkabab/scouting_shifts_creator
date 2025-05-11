@@ -1,5 +1,3 @@
-// main.dart
-
 import 'package:flutter/material.dart';
 import 'package:scouting_shifts_creater/main.dart';
 
@@ -92,30 +90,7 @@ class MatchesTabState extends State<MatchesTab> {
     List<Match> generatedMatches = [];
 
     for (int i = 1; i <= matchCount; i++) {
-      String matchName;
-
-      // Special naming for finals
-      if (_selectedMatchType == 'Finals') {
-        if (i == 1) {
-          matchName = 'Finals 1';
-        } else if (i == 2) {
-          matchName = 'Finals 2';
-        } else if (i == 3) {
-          matchName = 'Finals 3 (Tiebreaker)';
-        } else {
-          matchName = 'Finals $i';
-        }
-      } else if (_selectedMatchType == 'Double Elims') {
-        // For Double Elims we might want a different format
-        if (i <= matchCount / 2) {
-          matchName = 'DE Winners $i';
-        } else {
-          matchName = 'DE Losers ${i - (matchCount ~/ 2)}';
-        }
-      } else {
-        // Standard format
-        matchName = '$_selectedMatchType $i';
-      }
+      final String matchName = '$_selectedMatchType $i';
 
       if (!widget.matches.any((match) => match.name == matchName)) {
         generatedMatches.add(
@@ -168,104 +143,183 @@ class MatchesTabState extends State<MatchesTab> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Row(
-            children: [
-              Expanded(
-                child: DropdownButtonFormField<String>(
-                  value: _selectedMatchType,
-                  items:
-                      _matchTypes.map((String type) {
-                        return DropdownMenuItem<String>(
-                          value: type,
-                          child: Text(type),
-                        );
-                      }).toList(),
-                  decoration: const InputDecoration(
-                    labelText: 'Match Type',
-                    border: OutlineInputBorder(),
-                  ),
-                  onChanged: (value) {
-                    if (value != null) {
-                      setState(() {
-                        _selectedMatchType = value;
-                      });
-                    }
-                  },
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: TextField(
-                  controller: _countController,
-                  decoration: const InputDecoration(
-                    labelText: 'Match Count',
-                    border: OutlineInputBorder(),
-                  ),
-                  keyboardType: TextInputType.number,
-                ),
-              ),
-              const SizedBox(width: 16),
-              ElevatedButton(
-                onPressed: _generateMatches,
-                child: const Text('Generate Matches'),
-              ),
-            ],
-          ),
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Color(0xFFe0eafc), Color(0xFFcfdef3)],
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
         ),
-        Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Row(
-            children: [
-              Expanded(
-                child: TextField(
-                  controller: _nameController,
-                  decoration: const InputDecoration(
-                    labelText: 'Match Name',
-                    border: OutlineInputBorder(),
-                  ),
+      ),
+      child: SafeArea(
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Card(
+                elevation: 4,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Column(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.all(12.0),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: DropdownButtonFormField<String>(
+                              value: _selectedMatchType,
+                              items:
+                                  _matchTypes.map((String type) {
+                                    return DropdownMenuItem<String>(
+                                      value: type,
+                                      child: Text(type),
+                                    );
+                                  }).toList(),
+                              decoration: const InputDecoration(
+                                labelText: 'Match Type',
+                                border: OutlineInputBorder(),
+                                filled: true,
+                                fillColor: Colors.white,
+                              ),
+                              onChanged: (value) {
+                                if (value != null) {
+                                  setState(() {
+                                    _selectedMatchType = value;
+                                  });
+                                }
+                              },
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: TextField(
+                              controller: _countController,
+                              decoration: const InputDecoration(
+                                labelText: 'Match Count',
+                                border: OutlineInputBorder(),
+                                filled: true,
+                                fillColor: Colors.white,
+                              ),
+                              keyboardType: TextInputType.number,
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          ElevatedButton.icon(
+                            onPressed: _generateMatches,
+                            icon: const Icon(Icons.playlist_add),
+                            label: const Text('Generate'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.indigo,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 20,
+                                vertical: 14,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.all(12.0),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: TextField(
+                              controller: _nameController,
+                              decoration: const InputDecoration(
+                                labelText: 'Match Name',
+                                border: OutlineInputBorder(),
+                                filled: true,
+                                fillColor: Colors.white,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          ElevatedButton.icon(
+                            onPressed: _addMatch,
+                            icon: const Icon(Icons.add),
+                            label: const Text('Add'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.indigo,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 20,
+                                vertical: 14,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                            ),
+                          ),
+                          IconButton(
+                            onPressed: _clearAllMatches,
+                            icon: const Icon(
+                              Icons.delete_forever,
+                              color: Colors.redAccent,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              const SizedBox(width: 16),
-              ElevatedButton(
-                onPressed: _addMatch,
-                child: const Text('Add Match'),
-              ),
-              IconButton(
-                onPressed: _clearAllMatches,
-                icon: const Icon(Icons.delete),
-              ),
-            ],
-          ),
-        ),
-        Expanded(
-          child:
-              widget.matches.isEmpty
-                  ? const Center(child: Text('No matches added yet'))
-                  : ListView.builder(
-                    itemCount: widget.matches.length,
-                    itemBuilder: (context, index) {
-                      final match = widget.matches[index];
-                      return Card(
-                        margin: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 8,
-                        ),
-                        child: ListTile(
-                          title: Text(match.name),
-                          trailing: IconButton(
-                            icon: const Icon(Icons.delete),
-                            onPressed: () => _deleteMatch(match.id),
+            ),
+
+            Expanded(
+              child:
+                  widget.matches.isEmpty
+                      ? const Center(
+                        child: Text(
+                          'No matches added yet',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w500,
                           ),
                         ),
-                      );
-                    },
-                  ),
+                      )
+                      : ListView.builder(
+                        padding: const EdgeInsets.only(bottom: 16),
+                        itemCount: widget.matches.length,
+                        itemBuilder: (context, index) {
+                          final match = widget.matches[index];
+                          return Card(
+                            margin: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 8,
+                            ),
+                            elevation: 5,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: ListTile(
+                              title: Text(
+                                match.name,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              trailing: IconButton(
+                                icon: const Icon(
+                                  Icons.delete,
+                                  color: Colors.redAccent,
+                                ),
+                                onPressed: () => _deleteMatch(match.id),
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+            ),
+          ],
         ),
-      ],
+      ),
     );
   }
 }

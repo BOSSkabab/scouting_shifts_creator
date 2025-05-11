@@ -1,4 +1,3 @@
-// main.dart
 import 'package:flutter/material.dart';
 import 'package:scouting_shifts_creater/matches_tab.dart';
 import 'package:scouting_shifts_creater/schedule_tab.dart';
@@ -17,8 +16,15 @@ class ScoutShiftCreatorApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'Scout Shift Creator',
       theme: ThemeData(
-        primarySwatch: Colors.blue,
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.indigo),
+        useMaterial3: true,
+        scaffoldBackgroundColor: Colors.indigo,
         visualDensity: VisualDensity.adaptivePlatformDensity,
+        fontFamily: 'Roboto',
+        textTheme: ThemeData.light().textTheme.apply(
+          bodyColor: Colors.black87,
+          displayColor: Colors.black87,
+        ),
       ),
       home: const ScoutShiftCreator(),
     );
@@ -65,8 +71,20 @@ class ScoutShiftCreatorState extends State<ScoutShiftCreator> {
       length: 3,
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('Scout Shift Creator'),
+          title: const Text(
+            'Scout Shift Creator',
+            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+          ),
+          backgroundColor: Colors.indigo,
+          shape: const RoundedRectangleBorder(
+            borderRadius: BorderRadius.vertical(bottom: Radius.circular(20)),
+          ),
           bottom: const TabBar(
+            indicatorColor: Colors.amber,
+            indicatorWeight: 3.0,
+            labelColor: Colors.white,
+            unselectedLabelColor: Colors.white70,
+            labelStyle: TextStyle(fontWeight: FontWeight.bold),
             tabs: [
               Tab(icon: Icon(Icons.person), text: 'Scouts'),
               Tab(icon: Icon(Icons.event), text: 'Matches'),
